@@ -6,6 +6,7 @@ The interpreter starts searching for a main function, so make sure you created o
 # Commands
 - diga -> prints something in the stdout
 - calc -> do math calculations
+- var  -> declare a variable (syntax: var name = value)
 
 You can create functions too, using: 
 
