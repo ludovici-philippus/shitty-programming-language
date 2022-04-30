@@ -1,6 +1,0 @@
-main() {
-  var nome = Luis
-  diga "$nome"
-  diga "$USER"
-  diga "ola, mundo"
-}
