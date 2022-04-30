@@ -1,0 +1,8 @@
+main() {
+  var nome = Luis
+  var idade = 19
+  var valor2 = 10
+  diga "$(nome)"
+  diga "$(idade) + $(valor2) é igual a"
+  calc $(idade)+$(valor2)
+}

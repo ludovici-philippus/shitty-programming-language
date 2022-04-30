@@ -14,6 +14,9 @@ CURRENT_FUNCTION_PARAMS=()
 CURRENT_FUNCTION_HAS_PARAMS=false
 CURRENT_FUNCTION_PARAMS_ORIGINAL=()
 
+declare -A VARIABLES
+VARIABLES=()
+
 BACKUP_LINE=0
 
 LINE_CONTENT=''
@@ -76,7 +79,6 @@ change_function_params() {
     LINE_CONTENT=$(echo ${LINE_CONTENT} | sed "s/\<${CURRENT_FUNCTION_PARAMS_ORIGINAL[$COUNT]}\>/$param/")
     COUNT=$(( $COUNT + 1 ))
   done
-
 }
 
 run_function() {
@@ -86,6 +88,7 @@ run_function() {
   while [ $CURRENT_LINE -lt $CURRENT_FUNCTION_END_LINE ]
   do
     change_function_params
+    read_variables
     there_is_some_call
     update_actual_line
   done
@@ -98,8 +101,36 @@ run_main() {
   while [ $CURRENT_LINE -lt $MAIN_END_LINE ]
   do
     get_content_of_line
+    read_variables
     there_is_some_call
     update_actual_line
+  done
+}
+
+split_variable() {
+  VAR_NAME=$(echo ${LINE_CONTENT} | awk '{ print $2 }')
+  VAR_VALUE=$(echo ${LINE_CONTENT} | awk -F'[=]' '{ print $2 }' | sed 's/ //')
+  declare_variable
+}
+
+declare_variable() {
+  VARIABLES[$VAR_NAME]=$VAR_VALUE
+}
+
+read_variables() {
+  BACKUP_LINE=$CURRENT_LINE
+  VAR_QNT_IN_LINE=$(echo ${LINE_CONTENT} | grep -o '$(' | wc -l)
+  COUNT=0
+  while [ $COUNT -lt $VAR_QNT_IN_LINE ]
+  do
+    VAR_NAME=$(echo ${LINE_CONTENT} | awk -F'[$]' '{ print $2 }' | awk -F'[(]' '{ print $2 }' | awk -F'[)]' '{ print $1 }')
+    [[ ${VAR_NAME} = '' ]] && break
+
+    ERROR_MESSAGE="Variável $VAR_NAME não foi declarada anteriormente!"
+    [[ -z ${VARIABLES[$VAR_NAME]} ]] && return_error
+  
+    LINE_CONTENT=$(echo $LINE_CONTENT | sed "s/\$(${VAR_NAME})/${VARIABLES[$VAR_NAME]}/g")
+    COUNT=$(( $COUNT + 1 ))
   done
 }
 
@@ -112,13 +143,18 @@ there_is_some_call() {
 
   if [ "$CALL" = 'diga' ] 
   then
-    echo $(echo ${LINE_CONTENT} | awk -F'["]' '{print $2}')
+    STRING_TO_READ=$(echo $LINE_CONTENT | awk -F'["]' '{ print $2 }')
+    echo $STRING_TO_READ
+    #echo "$(echo ${LINE_CONTENT} | awk -F'["]' '{print $2}')"
 
   elif [ "$CALL" = 'calc' ]
   then
     EXPRESSION=$( echo ${LINE_CONTENT} | awk '{print $2}' )
     echo $( awk "BEGIN {print $EXPRESSION}")
 
+  elif [ "$CALL" = 'var' ]
+  then
+    split_variable
 
   # Exec user-made functions  
   elif [[ "$CALL" != '' && "$CURRENT_FUNCTION" = '' ]]
