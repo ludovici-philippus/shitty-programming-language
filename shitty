@@ -90,7 +90,7 @@ run_function() {
     change_function_params
     read_variables
     there_is_some_call
-    update_actual_line
+    update_current_line
   done
   CURRENT_LINE=$(($BACKUP_LINE + 1))
   CURRENT_FUNCTION=''
@@ -103,7 +103,7 @@ run_main() {
     get_content_of_line
     read_variables
     there_is_some_call
-    update_actual_line
+    update_current_line
   done
 }
 
@@ -134,7 +134,7 @@ read_variables() {
   done
 }
 
-update_actual_line() {
+update_current_line() {
   CURRENT_LINE=$(($CURRENT_LINE + 1))
 }
 
