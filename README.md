@@ -9,8 +9,8 @@ The interpreter starts searching for a main function, so make sure you created o
 
 You can create functions too, using: 
 
-```funcition_name(params){
-  function_body
-}```
+    funcition_name(params){
+      function_body
+    }
 
-and call them using: function_name(params)
+and call them using:    function_name(params)
