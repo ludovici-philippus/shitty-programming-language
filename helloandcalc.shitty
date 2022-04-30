@@ -1,0 +1,19 @@
+main() {
+  var nome = Luis
+  var idade = 19
+
+  diga "Olá, $(nome), você tem $(idade) anos!"
+  var valor1 = 25
+  teste_retorno
+  diga "teste"
+  soma 1,2,3
+}
+
+soma(a, b, c) {
+  diga "Resultado"
+}
+
+teste_retorno() {
+  diga "eita"
+  return: 135
+}
