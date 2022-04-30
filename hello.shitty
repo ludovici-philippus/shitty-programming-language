@@ -3,7 +3,7 @@ main(){
   diga "ola, mundo"
   diga "opa"
   diga "teste"
-  sum(1, 2)
+  sum 1, 2
 
   diga "Hello, world!"
 }
