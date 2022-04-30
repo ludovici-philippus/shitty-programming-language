@@ -1,0 +1,19 @@
+main() {
+  diga "Olá, mundo! Essa é minha linguagem de programação!"
+  diga "Teste"
+
+  soma 5,10
+  soma 1,1
+  
+  diga "O resultado de 100^99 é: "
+  calc 100**99
+  escreva Ola 
+}
+
+soma(a,b) {
+  calc a+b
+}
+
+escreva(algo) {
+  diga "algo"
+}

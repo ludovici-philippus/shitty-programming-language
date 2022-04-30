@@ -1,0 +1,17 @@
+main(){
+  diga "oi"
+  diga "ola, mundo"
+  diga "opa"
+  diga "teste"
+  sum(1, 2)
+
+  diga "Hello, world!"
+}
+
+
+
+
+
+sum(a, b){
+  return a+b
+}

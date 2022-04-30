@@ -1,0 +1,139 @@
+!/bin/sh
+set -e
+
+FILE=$1
+MAIN_LINE=0
+MAIN_END_LINE=0
+
+CURRENT_LINE=0
+CURRENT_FUNCTION=''
+CURRENT_FUNCTION_START_LINE=0
+CURRENT_FUNCTION_END_LINE=0
+CURRENT_FUNCTION_PARAMS_PASSED=false
+CURRENT_FUNCTION_PARAMS=()
+CURRENT_FUNCTION_HAS_PARAMS=false
+CURRENT_FUNCTION_PARAMS_ORIGINAL=()
+
+BACKUP_LINE=0
+
+LINE_CONTENT=''
+
+declare -A COLORS
+COLORS=([RED]='\033[0;31m' [GREEN]='\033[0;32m' [YELLOW]='\033[1;32m' [BLUE]='\033[0;34m' [WHITE]='\033[1;37m' [BLACK]='\033[0;30m')
+
+return_error() {
+  echo -e "\n"
+  echo -e "${COLORS[RED]}[ERRO] Linha $BACKUP_LINE"
+  echo -e "$ERROR_MESSAGE ${COLORS[WHITE]}"
+  exit 1
+}
+
+get_main_lines() {
+  MAIN_LINE=$(grep -nE 'main' ${FILE} | tr ':' ' ' | awk '{print $1}')
+  LINES_TO_THE_AWK=$((${MAIN_LINE} - 1))
+
+  MAIN_END_LINE=$(tail +${MAIN_LINE} ${FILE} | grep -nE -m 1 "}" | tr ':' ' ' | awk '{print $1+'${LINES_TO_THE_AWK}'}')
+}
+
+get_function_lines() {
+  CURRENT_FUNCTION=$1
+  CURRENT_FUNCTION_START_LINE=$(grep -nE "$1" ${FILE} | tr ':' ' ' | awk '{print $1}')
+
+  LINES_TO_THE_AWK=$((${CURRENT_FUNCTION_START_LINE}-1))
+
+  CURRENT_FUNCTION_END_LINE=$(tail +${CURRENT_FUNCTION_START_LINE} ${FILE} | grep -nE -m 1 "}" | tr ':' ' ' | awk '{print $1+'${LINES_TO_THE_AWK}'}')
+
+  BACKUP_LINE=$CURRENT_LINE
+  CURRENT_LINE=$CURRENT_FUNCTION_START_LINE
+  check_if_function_has_params
+  run_function
+}
+
+get_function_params() {
+  PARAMS_STRING="$(echo $LINE_CONTENT | awk '{$1=""; print $0}' | tr ',' ' ' | tr '"' ' ')"
+  [[ $PARAMS_STRING != '' ]] && CURRENT_FUNCTION_PARAMS_PASSED=true
+
+  CURRENT_FUNCTION_PARAMS=($PARAMS_STRING)
+}
+
+get_content_of_line() {
+  LINE_CONTENT=$(tail +${CURRENT_LINE} ${FILE} | head -1)
+}
+
+check_if_function_has_params() {
+  get_content_of_line
+  PARAMS="$(echo $LINE_CONTENT | awk -F'[(]' '{print $2}' | awk -F'[)]' '{print $1}' | tr ',' ' ')"
+  CURRENT_FUNCTION_PARAMS_ORIGINAL=($PARAMS)
+  ERROR_MESSAGE="Quantidade de parametros para a função $(echo ${CURRENT_FUNCTION} | tr '\\(' ' ')está incorreto!"
+  [ ${#CURRENT_FUNCTION_PARAMS[*]} -eq ${#CURRENT_FUNCTION_PARAMS_ORIGINAL[*]} ] || return_error
+}
+
+change_function_params() {
+  get_content_of_line
+  COUNT=0
+  for param in ${CURRENT_FUNCTION_PARAMS[*]}
+  do
+    LINE_CONTENT=$(echo ${LINE_CONTENT} | sed "s/\<${CURRENT_FUNCTION_PARAMS_ORIGINAL[$COUNT]}\>/$param/")
+    COUNT=$(( $COUNT + 1 ))
+  done
+
+}
+
+run_function() {
+  ERROR_MESSAGE='Função inexistente!'
+
+  [[ -z $CURRENT_FUNCTION_START_LINE ]] && return_error
+  while [ $CURRENT_LINE -lt $CURRENT_FUNCTION_END_LINE ]
+  do
+    change_function_params
+    there_is_some_call
+    update_actual_line
+  done
+  CURRENT_LINE=$(($BACKUP_LINE + 1))
+  CURRENT_FUNCTION=''
+  run_main
+}
+
+run_main() {
+  while [ $CURRENT_LINE -lt $MAIN_END_LINE ]
+  do
+    get_content_of_line
+    there_is_some_call
+    update_actual_line
+  done
+}
+
+update_actual_line() {
+  CURRENT_LINE=$(($CURRENT_LINE + 1))
+}
+
+there_is_some_call() {
+  CALL=$(echo ${LINE_CONTENT} | awk '{print $1}')
+
+  if [ "$CALL" = 'diga' ] 
+  then
+    echo $(echo ${LINE_CONTENT} | awk -F'["]' '{print $2}')
+
+  elif [ "$CALL" = 'calc' ]
+  then
+    EXPRESSION=$( echo ${LINE_CONTENT} | awk '{print $2}' )
+    echo $( awk "BEGIN {print $EXPRESSION}")
+
+
+  # Exec user-made functions  
+  elif [[ "$CALL" != '' && "$CURRENT_FUNCTION" = '' ]]
+  then
+    get_function_params
+    get_function_lines "$CALL\("
+  fi
+
+}
+
+interpret() {
+  ERROR_MESSAGE='Você precisa passar um código .shitty como parametro!'
+  [[ -z $1 ]] && return_error
+  get_main_lines
+  CURRENT_LINE=$((${MAIN_LINE} + 1))
+  run_main
+}
+interpret $FILE
