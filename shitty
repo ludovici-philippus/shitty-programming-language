@@ -165,6 +165,11 @@ there_is_some_call() {
     echo $STRING_TO_READ
     #echo "$(echo ${LINE_CONTENT} | awk -F'["]' '{print $2}')"
 
+  elif [ "$CALL" = 'print' ]
+  then
+    STRING_TO_READ=$(echo $LINE_CONTENT | awk -F'["]' '{ print $2 }')
+    printf "$STRING_TO_READ"
+
   elif [ "$CALL" = 'calc' ]
   then
     EXPRESSION=$( echo ${LINE_CONTENT} | awk '{print $2}' )

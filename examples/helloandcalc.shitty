@@ -5,8 +5,6 @@ main() {
   diga "Olá, $(nome), você tem $(idade) anos!"
   var valor1 = 25
   teste_retorno
-  diga "teste"
-  soma 1,2,3
 }
 
 soma(a, b, c) {

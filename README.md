@@ -7,6 +7,8 @@ The interpreter starts searching for a main function, so make sure you created o
 - diga -> prints something in the stdout
 - calc -> do math calculations
 - var  -> declare a variable (syntax: var name = value)
+- return: -> return a value from a function
+- print -> prints something pre formatted in the stdout
 
 You can create functions too, using: 
 

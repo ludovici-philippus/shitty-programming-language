@@ -1,0 +1,4 @@
+main() {
+  var nome = Luis
+  print "Olá, $(nome)\n"
+}
