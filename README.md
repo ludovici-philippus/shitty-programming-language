@@ -12,7 +12,7 @@ The interpreter starts searching for a main function, so make sure you created o
 
 You can create functions too, using: 
 
-    funcition_name(param1, param2){
+    function_name(param1, param2){
       function_body
     }
 
