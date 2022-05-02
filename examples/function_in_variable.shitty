@@ -1,0 +1,5 @@
+main() {
+  var idade = $<calc 18+1>
+  var nome = Luis
+  diga "$(nome) tem $(idade) anos"
+}

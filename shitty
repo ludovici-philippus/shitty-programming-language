@@ -113,11 +113,27 @@ split_variable() {
   VAR_NAME=$(echo ${LINE_CONTENT} | awk '{ print $2 }')
   VAR_VALUE=$(echo ${LINE_CONTENT} | awk -F'[=]' '{ print $2 }' | sed 's/ //')
   
+  run_function_inside_variable
   declare_variable
+}
+
+run_function_inside_variable() {
+  # TO-DO
+  FUNCTION_TO_RUN=$(echo $VAR_VALUE | awk -F'[$]' '{ print $2 }' | awk -F'[<]' '{ print $2 }' | awk -F'[>]' '{ print $1 }')
+  if [[ $FUNCTION_TO_RUN != '' ]]
+  then
+    there_is_some_call
+    VAR_VALUE=$LINE_CONTENT
+    FUNCTION_TO_RUN=''
+  fi
 }
 
 declare_variable() {
   VARIABLES[$VAR_NAME]=$VAR_VALUE
+  VAR_VALUE=''
+  VAR_NAME=''
+  unset $VAR_NAME
+  unset $VAR_VALUE
 }
 
 read_variables() {
@@ -157,6 +173,13 @@ update_current_line() {
 
 there_is_some_call() {
   CALL=$(echo ${LINE_CONTENT} | awk '{print $1}')
+
+  if [ "${FUNCTION_TO_RUN}" != '' ]
+  then
+    LINE_CONTENT=$FUNCTION_TO_RUN
+    CALL=$(echo ${FUNCTION_TO_RUN} | awk '{ print $1 }')
+    
+  fi
   
 
   if [ "$CALL" = 'diga' ] 
@@ -173,7 +196,7 @@ there_is_some_call() {
   elif [ "$CALL" = 'calc' ]
   then
     EXPRESSION=$( echo ${LINE_CONTENT} | awk '{print $2}' )
-    echo $( awk "BEGIN {print $EXPRESSION}")
+    LINE_CONTENT=$(awk "BEGIN {print $EXPRESSION}")
 
   elif [ "$CALL" = 'var' ]
   then
