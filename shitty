@@ -15,8 +15,10 @@ CURRENT_FUNCTION_HAS_PARAMS=false
 CURRENT_FUNCTION_PARAMS_ORIGINAL=()
 CURRENT_FUNCTION_RETURN=''
 
+
 declare -A VARIABLES
 VARIABLES=()
+FUNCTION_INSIDE_VARIABLE=false
 
 BACKUP_LINE=0
 
@@ -118,7 +120,6 @@ split_variable() {
 }
 
 run_function_inside_variable() {
-  # TO-DO
   FUNCTION_TO_RUN=$(echo $VAR_VALUE | awk -F'[$]' '{ print $2 }' | awk -F'[<]' '{ print $2 }' | awk -F'[>]' '{ print $1 }')
   if [[ $FUNCTION_TO_RUN != '' ]]
   then
@@ -160,7 +161,14 @@ return_value() {
 
   get_content_of_line
   CURRENT_FUNCTION=$(echo $CURRENT_FUNCTION | tr '\\(' ' ' | sed 's/ //g')
-  LINE_CONTENT=$(echo $LINE_CONTENT | sed "s/${CURRENT_FUNCTION}/${CURRENT_FUNCTION_RETURN}/")
+  if [[ $FUNCTION_INSIDE_VARIABLE = true ]]
+  then
+    LINE_CONTENT=$(echo $LINE_CONTENT | sed "s/\$<${CURRENT_FUNCTION}.*>/$CURRENT_FUNCTION_RETURN/")
+    VAR_VALUE=$(echo $LINE_CONTENT | awk -F'[=]' '{ print $2 }')
+    declare_variable
+  else
+    LINE_CONTENT=$(echo $LINE_CONTENT | sed "s/${CURRENT_FUNCTION}.*/${CURRENT_FUNCTION_RETURN}/")
+  fi
 
   CURRENT_FUNCTION_RETURN=''
 
@@ -178,9 +186,7 @@ there_is_some_call() {
   then
     LINE_CONTENT=$FUNCTION_TO_RUN
     CALL=$(echo ${FUNCTION_TO_RUN} | awk '{ print $1 }')
-    
   fi
-  
 
   if [ "$CALL" = 'diga' ] 
   then
@@ -209,10 +215,15 @@ there_is_some_call() {
   # Exec user-made functions  
   elif [[ "$CALL" != '' && "$CURRENT_FUNCTION" = '' ]]
   then
+    [ "${FUNCTION_TO_RUN}" != '' ] && FUNCTION_INSIDE_VARIABLE=true
     get_function_params
     get_function_lines "$CALL\("
   fi
-
+ 
+  if [ "${FUNCTION_TO_RUN}" != '' ]
+  then
+    FUNCTION_TO_RUN=''
+  fi
 }
 
 interpret() {

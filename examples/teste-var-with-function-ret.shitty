@@ -1,0 +1,8 @@
+main() {
+  var nome = $<name>
+  diga "O nome é $(nome)"
+}
+
+name() {
+  return: Luis
+}
